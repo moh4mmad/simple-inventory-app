@@ -1,8 +1,8 @@
 FROM node:10
-ENV DBHOST=postgres
-ENV DBUSER=postgres
-ENV DBPASS=
-ENV DBNAME=inventory
+ENV DBHOST=${DBHOST}
+ENV DBUSER=${DBUSER}
+ENV DBPASS=${DBPASS}
+ENV DBNAME=${DBNAME}
 WORKDIR /app
 COPY package*.json ./
 RUN npm install 
