@@ -24,6 +24,7 @@ phases:
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$FRONTEND_IMAGE_TAG
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$BACKEND_IMAGE_TAG
       - echo Writing image definitions file...
+      - cd ../
       - printf '[{"name":"frontend-container","imageUri":"%s"}, {"name":"backend-container","imageUri":"%s"}]' $REPOSITORY_URI:$FRONTEND_IMAGE_TAG $REPOSITORY_URI:$BACKEND_IMAGE_TAG > imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
