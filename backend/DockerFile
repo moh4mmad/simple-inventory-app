@@ -3,7 +3,6 @@ ENV DBHOST=inventory-db.c8eukzq9vuvd.ap-southeast-2.rds.amazonaws.com
 ENV DBUSER=postgres
 ENV DBPASS=qRnvuUg8x6QDvFWXacdg
 ENV DBNAME=inventory
-RUN cd ./backend
 WORKDIR /app
 COPY package*.json ./
 RUN npm install 
