@@ -28,12 +28,10 @@ pipeline {
     // Building Docker images
     stage('Building image') {
       steps{
-        sh "pwd"
         dir('backend') {
-        sh "pwd"
-        script {
-          dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-        }
+          script {
+            dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+          }
         }
       }
     }
