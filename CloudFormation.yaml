@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: App Deployment Template for Inventory App
+
+Parameters:
+  NodeJSAPIPort:
+    Type: Number
+    Description: The Port that NodeJS Backend listening on
+    Default: 8080
+    AllowedValues:
+      - 5000
+  ContainerImage:
+    Type: String
+    Description: container image
+  Environment:
+    Type: String
+    Description: Environment to Deploy
+    Default: prod
+  WelcomeMessage:
+    Type: String
+    Description: environment variable for NodeJS image
+  ImageRepositoryType:
+    Type: String
+    Description: Type of the repository
+    Default: ECR
+
+Conditions:
+  NeedsAccessRole: !Equals [!Ref ImageRepositoryType, "ECR"]
+
+Resources:
+  AccessRole:
+    Type: AWS::IAM::Role
+    Condition: NeedsAccessRole
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - build.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: tasks.apprunner.amazonaws.com
+            Action: "sts:AssumeRole"
+
+  ReactWebApp:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub WebApp-${Environment}
+      SourceConfiguration:
+        AuthenticationConfiguration: !If
+          - NeedsAccessRole
+          - AccessRoleArn: !GetAtt AccessRole.Arn
+          - !Ref AWS::NoValue
+        AutoDeploymentsEnabled: true
+        ImageRepository:
+          ImageIdentifier: !Ref ContainerImage
+          ImageRepositoryType: !Ref ImageRepositoryType
+          ImageConfiguration:
+            Port: !Ref NodeJSAPIPort
+            RuntimeEnvironmentVariables:
+              - Name: API_WORKS_MESSAGE
+                Value: !Ref WelcomeMessage
+      InstanceConfiguration:
+        Cpu: 1 vCPU
+        Memory: 2 GB
+      Tags:
+        - Key: environment
+          Value: !Ref Environment
+
+Outputs:
+  AppRunnerServiceArn:
+    Description: ServiceArn of GitHub
+    Value: !GetAtt ReactWebApp.ServiceArn
+  AppRunnerServiceId:
+    Description: AppRunnerServiceId
+    Value: !GetAtt ReactWebApp.ServiceId
+  AppRunnerServiceUrl:
+    Description: AppRunnerServiceUrl
+    Value: !GetAtt ReactWebApp.ServiceUrl
