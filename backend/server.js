@@ -1,7 +1,6 @@
 /**
  * Starts the application on the port specified.
  */
-
 const api = require('./src/api');
 
 const PORT = process.env.PORT || 8080;

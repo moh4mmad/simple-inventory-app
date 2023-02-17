@@ -14,6 +14,7 @@ The backend of the application is a RESTful API built using Node.js. It is respo
 
 ## Resources Used
 
+- Docker: The application is containerized using Docker to ensure consistency and ease of deployment.
 - Elastic Container Registry (ECR): Both the frontend and backend are containerized using Docker. The Docker images are stored in an Elastic Container Registry (ECR) repository.
 - Elastic Container Service (ECS): The Docker images are deployed to an Elastic Container Service (ECS) cluster. The ECS cluster is configured to automatically scale the number of tasks based on the load on the application.
 - RDS: The application uses an Amazon Relational Database Service (RDS) PostgreSQL database for data storage.

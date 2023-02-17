@@ -6,11 +6,11 @@ module.exports = {
    * More info: https://sequelize.org/v5/manual/getting-started.html#setting-up-a-connection
    */
   database: {
-    host: process.env.DBHOST || 'localhost',
+    host: process.env.DBHOST || 'test-database.c8eukzq9vuvd.ap-southeast-2.rds.amazonaws.com',
     username: process.env.DBUSER || 'postgres',
     dialect: 'postgres',
-    password: process.env.DBPASSWORD || '123456abc',
-    database: process.env.DBNAME || 'inventories',
+    password: process.env.DBPASSWORD || 'vlPlGWD5zcKGD0yhzb3T',
+    database: process.env.DBNAME || 'inventory',
     maxConcurrentQueries: 100,
     dialectOptions: {
         ssl:'Amazon RDS'
