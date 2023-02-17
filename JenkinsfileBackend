@@ -31,10 +31,9 @@ pipeline {
         sh "pwd"
         dir('backend') {
         sh "pwd"
-        }
-        sh "pwd"
         script {
           dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+        }
         }
       }
     }
