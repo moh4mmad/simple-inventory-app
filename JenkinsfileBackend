@@ -35,12 +35,12 @@ pipeline {
       // Building Docker images & push to ECR
       stage('Building image & push to ECR') {
         steps{
-          //dir('backend') {
+          withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}") {
             script {
               sh 'chmod +x ./build.sh && ./build.sh'
               //dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
             }
-          //}
+          }
         }
       }
 
