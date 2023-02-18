@@ -45,7 +45,7 @@ pipeline {
 
               // Get temporary authentication token using AWS CLI
               withCredentials([string(credentialsId: 'aws-credential', variable: 'aws_creds')]) {
-                def cmd = "aws sts get-session-token --serial-number ${MFA_SERIAL} --token-code \${MFA_TOKEN} --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text"
+                def cmd = "aws sts get-session-token --serial-number ${MFA_SERIAL} --token-code ${MFA_TOKEN} --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text"
                 def creds = sh(script: cmd, returnStdout: true).trim().split()
                 env.AWS_ACCESS_KEY_ID = creds[0]
                 env.AWS_SECRET_ACCESS_KEY = creds[1]
