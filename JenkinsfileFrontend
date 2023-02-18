@@ -15,16 +15,6 @@ pipeline {
    
     stages {
 
-    // Tests
-    // stage('Unit Tests') {
-    //   steps{
-    //     script {
-    //       sh 'npm install'
-    //       sh 'npm test -- --watchAll=false'
-    //     }
-    //   }
-    // }
-        
     // Building Docker images
       stage('Building image') {
         steps{
@@ -53,7 +43,7 @@ pipeline {
           withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}")
           {
             script {
-              sh './script.sh'
+              sh './deploy.sh'
             }
           }
         }

@@ -35,17 +35,39 @@ pipeline {
           }
         }
       }
-   
-    // Uploading Docker images into AWS ECR
+
+      // Uploading Docker images into AWS ECR
       stage('Pushing to ECR') {
         steps{  
             script {
+
+              def ecrCredentials = withAWS(region: AWS_DEFAULT_REGION, role: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/EC2roleForECS") {
+                    def sts = aws.STS()
+                    def mfa = "arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/newInventoryDevice"
+                    def tokenCode = input(
+                        message: 'Enter your MFA token code:',
+                        parameters: [
+                            string(defaultValue: '', description: 'Enter your MFA token code', name: 'tokenCode')
+                        ]
+                    )
+                    def session = sts.getSessionToken(
+                        new com.amazonaws.services.securitytoken.model.GetSessionTokenRequest()
+                            .withSerialNumber(mfa)
+                            .withTokenCode(tokenCode)
+                    )
+                    return [
+                        accessKey: session.credentials.accessKeyId,
+                        secretKey: session.credentials.secretAccessKey,
+                        sessionToken: session.credentials.sessionToken
+                    ]
+              }
+
               docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
               {
                 dockerImage.push()
               }
             }
-          }
+        }
       }
       
       stage('Deploy') {
@@ -53,7 +75,7 @@ pipeline {
           withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}")
           {
             script {
-              sh './script.sh'
+              sh './deploy.sh'
             }
           }
         }
