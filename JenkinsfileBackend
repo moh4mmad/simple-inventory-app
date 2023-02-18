@@ -1,3 +1,12 @@
+def getAuthorizationToken() {
+    withAWS(region: AWS_DEFAULT_REGION, credentials: registryCredential) {
+        sh "aws sts get-session-token --serial-number $MFA_DEVICE --token-code $MFA_TOKEN --output text --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' > session_token.txt"
+        sh "export AWS_ACCESS_KEY_ID=$(cat session_token.txt | awk '{print $1}')"
+        sh "export AWS_SECRET_ACCESS_KEY=$(cat session_token.txt | awk '{print $2}')"
+        sh "export AWS_SESSION_TOKEN=$(cat session_token.txt | awk '{print $3}')"
+    }
+}
+
 pipeline {
     agent any
     environment {
@@ -11,6 +20,8 @@ pipeline {
         IMAGE_TAG="${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
+        MFA_DEVICE = "arn:aws:iam::314543738592:mfa/salah.udin.sakib"
+        MFA_TOKEN = input(message: 'Enter MFA token code', parameters: [string(defaultValue: '', description: 'MFA Token', name: 'TokenCode')])
     }
    
     stages {
@@ -40,7 +51,7 @@ pipeline {
       stage('Pushing to ECR') {
         steps{  
             script {
-              def token = getAuthorizationToken()
+              getAuthorizationToken()
               docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
               {
                 dockerImage.push()
@@ -59,22 +70,6 @@ pipeline {
           }
         }
       }
-    }
-
-    def getAuthorizationToken() {
-        withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: registryCredential,
-            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-            mfaSerialVariable: 'MFA_SERIAL_NUMBER',
-            mfaTokenVariable: 'MFA_TOKEN_CODE'
-        ]]) {
-            def output = sh(script: "aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION}", returnStdout: true).trim()
-            def parts = output.split(' ')
-            def token = parts[5]
-            return token
-        }
     }
 
 }
