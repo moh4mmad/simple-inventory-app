@@ -24,34 +24,28 @@ pipeline {
     //     }
     //   }
     // }
-
-    stage('Set aws session token') {
-      steps {
-        script {
-          withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}") {
-            sh "export AWS_ACCESS_KEY_ID=ASIAUSPCER3QEIDA7W5Q"
-            sh "export AWS_SECRET_ACCESS_KEY=ZZrQxRWx50QbvOmoLOeybOuxYsJ4YaLGmDcTWUyu"
-            sh "export AWS_SESSION_TOKEN=FwoGZXIvYXdzEPL//////////wEaDET/ba6T1/9AjGhBeiKGAUZ7NQzIcQy6IN2uT/swOEt5euWHxma6MKwXcR7YASqt2k5lED3qpJacQDd7+VT/RuBI/VRmqBRP7WuRaZ5t4L7+HshIIl6FH3YK42OLKSLRX+eyyqbSszxFakerwCa2zl1DQS5qBHEAnS73JE04vhRqX0rU+C0Ta87zXTN9TCGY2ePK4e4tKKqCxJ8GMiiq9+htwgMIpmSusqlLa1gh/L2m0ZZ5Rc9e000K+GE6W3cTLOd+Kukn"
-          }
-        }
-      }
-    }
         
-    // Uploading Docker images into AWS ECR
-      stage('Pushing to ECR') {
-        steps{  
+    // Building Docker images
+      stage('Building image') {
+        steps{
           dir('backend') {
             script {
-              //docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}")
-              //{
-                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}"
-                sh "docker build -t ${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
-                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:${IMAGE_TAG}"
-                sh "docker push ${REPOSITORY_URI}:${IMAGE_TAG}"
-              //}
+              dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
             }
           }
         }
+      }
+   
+    // Uploading Docker images into AWS ECR
+      stage('Pushing to ECR') {
+        steps{  
+            script {
+              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+              {
+                dockerImage.push()
+              }
+            }
+          }
       }
       
       stage('Deploy') {
