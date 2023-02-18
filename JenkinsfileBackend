@@ -2,9 +2,9 @@ def getAuthorizationToken() {
     withAWS(region: AWS_DEFAULT_REGION, credentials: registryCredential) {
       script {
         sh "aws sts get-session-token --serial-number ${MFA_DEVICE} --token-code ${MFA_TOKEN} --output text --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' > session_token.txt"
-        sh "export AWS_ACCESS_KEY_ID=$(cat session_token.txt | awk '{print \$1}')"
-        sh "export AWS_SECRET_ACCESS_KEY=$(cat session_token.txt | awk '{print \$2')"
-        sh "export AWS_SESSION_TOKEN=$(cat session_token.txt | awk '{print \$3')"
+        sh "export AWS_ACCESS_KEY_ID=\$(cat session_token.txt | awk '{print \$1}')"
+        sh "export AWS_SECRET_ACCESS_KEY=\$(cat session_token.txt | awk '{print \$2')"
+        sh "export AWS_SESSION_TOKEN=\$(cat session_token.txt | awk '{print \$3')"
       }
     }
 }
