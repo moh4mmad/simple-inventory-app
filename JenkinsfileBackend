@@ -41,7 +41,7 @@ pipeline {
         steps{  
             script {
 
-              def ecrCredentials = withAWS(region: AWS_DEFAULT_REGION, role: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/EC2roleForECS") {
+              def ecrCredentials = withAWS(region: AWS_DEFAULT_REGION, credentials: registryCredential) {
                     def sts = aws.STS()
                     def mfa = "arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/newInventoryDevice"
                     def tokenCode = input(
