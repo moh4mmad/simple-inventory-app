@@ -34,8 +34,9 @@ pipeline {
       // Building Docker images & push to ECR
       stage('Building image & push to ECR') {
         when {
-          expression {
-            env.BRANCH_NAME == 'backend' || env.BRANCH_NAME == 'frontend'
+          anyOf {
+            branch 'backend'
+            branch 'frontend'
           }
         }
         steps{
@@ -70,7 +71,7 @@ pipeline {
           withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}")
           {
             script {
-              sh './deploy.sh'
+              sh 'chmod +x deploy.sh && ./deploy.sh'
             }
           }
         }
