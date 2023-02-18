@@ -27,7 +27,6 @@ pipeline {
               sh "export AWS_ACCESS_KEY_ID=ASIAUSPCER3QEIDA7W5Q"
               sh "export AWS_SECRET_ACCESS_KEY=ZZrQxRWx50QbvOmoLOeybOuxYsJ4YaLGmDcTWUyu"
               sh "export AWS_SESSION_TOKEN=FwoGZXIvYXdzEPL//////////wEaDET/ba6T1/9AjGhBeiKGAUZ7NQzIcQy6IN2uT/swOEt5euWHxma6MKwXcR7YASqt2k5lED3qpJacQDd7+VT/RuBI/VRmqBRP7WuRaZ5t4L7+HshIIl6FH3YK42OLKSLRX+eyyqbSszxFakerwCa2zl1DQS5qBHEAnS73JE04vhRqX0rU+C0Ta87zXTN9TCGY2ePK4e4tKKqCxJ8GMiiq9+htwgMIpmSusqlLa1gh/L2m0ZZ5Rc9e000K+GE6W3cTLOd+Kukn"
-              sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}"
             }
           }
         }
@@ -39,6 +38,7 @@ pipeline {
           withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}") {
             script {
               dir(${WORKSPACE}) {
+                sh "aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 314543738592.dkr.ecr.ap-southeast-2.amazonaws.com"
                 sh "docker build -t ${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
                 sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:${IMAGE_TAG}"
                 sh "docker push ${REPOSITORY_URI}:${IMAGE_TAG}"
