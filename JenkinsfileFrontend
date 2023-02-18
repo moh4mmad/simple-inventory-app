@@ -4,11 +4,11 @@ pipeline {
         AWS_ACCOUNT_ID="314543738592"
         AWS_DEFAULT_REGION="ap-southeast-2" 
         CLUSTER_NAME="inventory-app-cluster"
-        SERVICE_NAME="INVENTORY-APP-BACKEND-TASK"
-        TASK_DEFINITION_NAME="INVENTORY-APP-BACKEND"
+        SERVICE_NAME="INVENTORY-APP-FRONTEND-TASK"
+        TASK_DEFINITION_NAME="INVENTORY-APP-FRONTEND"
         DESIRED_COUNT="1"
         IMAGE_REPO_NAME="inventory-app"
-        IMAGE_TAG="backend:${env.BUILD_ID}"
+        IMAGE_TAG="frontend${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
     }
@@ -28,7 +28,7 @@ pipeline {
     // Building Docker images
       stage('Building image') {
         steps{
-          dir('backend') {
+          dir('frontend') {
             script {
               dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
             }
