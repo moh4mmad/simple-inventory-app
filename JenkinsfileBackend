@@ -51,6 +51,7 @@ pipeline {
     // Uploading Docker images into AWS ECR
       stage('Pushing to ECR') {
         steps{  
+          dir('backend') {
             script {
               //docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}")
               //{
@@ -60,6 +61,7 @@ pipeline {
               //}
             }
           }
+        }
       }
       
       stage('Deploy') {
