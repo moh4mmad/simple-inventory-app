@@ -11,30 +11,10 @@ pipeline {
         IMAGE_TAG="${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
-        AWS_MFA_SERIAL = "arn:aws:iam::314543738592:mfa/newInventoryDevice"
-        MFA_TOKEN =  '312647'
-        AWS_ACCESS_KEY_ID = credentials('aws-credential').AWS_ACCESS_KEY_ID
-        AWS_SECRET_ACCESS_KEY = credentials('aws-credential').AWS_SECRET_ACCESS_KEY
+        AWS_MFA_SERIAL = "arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/newInventoryDevice"
     }
    
     stages {
-
-        // Get temporary authentication token using AWS CLI
-        stage('Authenticate with AWS') {
-            steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${registryCredential}"]]) {
-                    withEnv(['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_DEFAULT_REGION']) {
-                        script {
-                            sh "aws sts get-session-token --serial-number ${AWS_MFA_SERIAL} --token-code ${MFA_TOKEN} --duration-seconds 3600 > token.txt"
-                            sh "export AWS_ACCESS_KEY_ID=`cat token.txt | jq -r '.Credentials.AccessKeyId'`"
-                            sh "export AWS_SECRET_ACCESS_KEY=`cat token.txt | jq -r '.Credentials.SecretAccessKey'`"
-                            sh "export AWS_SESSION_TOKEN=`cat token.txt | jq -r '.Credentials.SessionToken'`"
-                        }
-                    }
-                }
-            }
-        }
-        
     // Building Docker images
       stage('Building image') {
         steps{
@@ -50,9 +30,14 @@ pipeline {
       stage('Pushing to ECR') {
         steps{  
             script {
-              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}")
-              {
-                dockerImage.push()
+              // Get temporary authentication token with MFA enabled
+              def auth = getAWSTemporaryCredentialsWithMFA()
+
+              // Set the AWS credentials for Docker
+              withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: registryCredential]]) {
+                  docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}") {
+                      dockerImage.push()
+                  }
               }
           }
         }
@@ -69,5 +54,28 @@ pipeline {
         }
       }
       
+    }
+}
+
+def getAWSTemporaryCredentialsWithMFA() {
+    def tokenCode = input(message: 'Enter MFA token code', parameters: [string(defaultValue: '', description: 'Token code', name: 'TokenCode')])
+
+    def accessKey = sh(script: "aws configure get aws_access_key_id", returnStdout: true).trim()
+    def secretKey = sh(script: "aws configure get aws_secret_access_key", returnStdout: true).trim()
+    def sessionToken = sh(script: "aws configure get aws_session_token", returnStdout: true).trim()
+
+    // Check if session token is still valid
+    if (sessionToken && sh(script: "aws sts get-caller-identity --output text --query 'Account'", returnStatus: true) == 0) {
+        return [AWS_ACCESS_KEY_ID: accessKey, AWS_SECRET_ACCESS_KEY: secretKey, AWS_SESSION_TOKEN: sessionToken]
+    } else {
+        // Get a new session token with MFA enabled
+        sh(script: "aws sts get-session-token --serial-number ${AWS_MFA_SERIAL} --token-code ${tokenCode} --output text --query 'Credentials.[AccessKeyId, SecretAccessKey, SessionToken]' > tempCreds.txt")
+
+        def tempCreds = readFile('tempCreds.txt').trim().split()
+        def newAccessKey = tempCreds[0]
+        def newSecretKey = tempCreds[1]
+        def newSessionToken = tempCreds[2]
+
+        return [AWS_ACCESS_KEY_ID: newAccessKey, AWS_SECRET_ACCESS_KEY: newSecretKey, AWS_SESSION_TOKEN: newSessionToken]
     }
 }
