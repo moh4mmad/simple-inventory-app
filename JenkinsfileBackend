@@ -11,10 +11,20 @@ pipeline {
         IMAGE_TAG="${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
-        AWS_MFA_SERIAL = "arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/newInventoryDevice"
     }
    
     stages {
+
+    // Tests
+    // stage('Unit Tests') {
+    //   steps{
+    //     script {
+    //       sh 'npm install'
+    //       sh 'npm test -- --watchAll=false'
+    //     }
+    //   }
+    // }
+        
     // Building Docker images
       stage('Building image') {
         steps{
@@ -30,14 +40,10 @@ pipeline {
       stage('Pushing to ECR') {
         steps{  
             script {
-              // Get temporary authentication token with MFA enabled
-              def auth = getAWSTemporaryCredentialsWithMFA()
-
-              // Set the AWS credentials for Docker
-              withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: registryCredential]]) {
-                  docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}") {
-                      dockerImage.push()
-                  }
+              def token = getAuthorizationToken()
+              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+              {
+                dockerImage.push()
               }
           }
         }
@@ -53,29 +59,22 @@ pipeline {
           }
         }
       }
-      
     }
-}
 
-def getAWSTemporaryCredentialsWithMFA() {
-    def tokenCode = input(message: 'Enter MFA token code', parameters: [string(defaultValue: '', description: 'Token code', name: 'TokenCode')])
-
-    def accessKey = sh(script: "aws configure get aws_access_key_id", returnStdout: true).trim()
-    def secretKey = sh(script: "aws configure get aws_secret_access_key", returnStdout: true).trim()
-    def sessionToken = sh(script: "aws configure get aws_session_token", returnStdout: true).trim()
-
-    // Check if session token is still valid
-    if (sessionToken && sh(script: "aws sts get-caller-identity --output text --query 'Account'", returnStatus: true) == 0) {
-        return [AWS_ACCESS_KEY_ID: accessKey, AWS_SECRET_ACCESS_KEY: secretKey, AWS_SESSION_TOKEN: sessionToken]
-    } else {
-        // Get a new session token with MFA enabled
-        sh(script: "aws sts get-session-token --serial-number ${AWS_MFA_SERIAL} --token-code ${tokenCode} --output text --query 'Credentials.[AccessKeyId, SecretAccessKey, SessionToken]' > tempCreds.txt")
-
-        def tempCreds = readFile('tempCreds.txt').trim().split()
-        def newAccessKey = tempCreds[0]
-        def newSecretKey = tempCreds[1]
-        def newSessionToken = tempCreds[2]
-
-        return [AWS_ACCESS_KEY_ID: newAccessKey, AWS_SECRET_ACCESS_KEY: newSecretKey, AWS_SESSION_TOKEN: newSessionToken]
+    def getAuthorizationToken() {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: registryCredential,
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
+            mfaSerialVariable: 'MFA_SERIAL_NUMBER',
+            mfaTokenVariable: 'MFA_TOKEN_CODE'
+        ]]) {
+            def output = sh(script: "aws ecr get-login --no-include-email --region ${AWS_DEFAULT_REGION}", returnStdout: true).trim()
+            def parts = output.split(' ')
+            def token = parts[5]
+            return token
+        }
     }
+
 }
