@@ -11,6 +11,7 @@ pipeline {
         IMAGE_TAG="backend${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
+        WORKSPACE = "./backend"
     }
    
     stages {
@@ -34,12 +35,12 @@ pipeline {
       // Building Docker images & push to ECR
       stage('Building image & push to ECR') {
         steps{
-          dir('backend') {
+          //dir('backend') {
             script {
               sh './build.sh'
               //dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
             }
-          }
+          //}
         }
       }
 
