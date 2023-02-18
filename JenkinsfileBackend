@@ -22,7 +22,7 @@ pipeline {
         IMAGE_TAG="${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
-        MFA_DEVICE = "arn:aws:iam::314543738592:mfa/salah.udin.sakib"
+        MFA_DEVICE = "arn:aws:iam::314543738592:mfa/newInventoryDevice"
         MFA_TOKEN = input(message: 'Enter MFA token code', parameters: [string(defaultValue: '', description: 'MFA Token', name: 'TokenCode')])
     }
    
