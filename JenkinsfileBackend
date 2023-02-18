@@ -10,7 +10,11 @@ pipeline {
         IMAGE_REPO_NAME="inventory-app"
         IMAGE_TAG="backend${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        registryCredential = awsCredentials()
+        AWS_ACCESS_KEY_ID = "ASIAUSPCER3QCJGCB654"
+        AWS_SECRET_ACCESS_KEY = "H+i8mMa4Aqrx1lXcwr3WGuEYvGjbuHkRd7aGO4Ma"
+        AWS_SESSION_TOKEN = "FwoGZXIvYXdzEPH//////////wEaDJ0ZzKH9j3xFiP1iwiKGAeOMs+cdw3kBtdp3ix2RApUm5CQQu4q0QPdMS8gUEWxzBHKbsJ745h/IiZkxQJdwaIFqRecOW0fYduPdfVSFT0yn014ObNmdychp7kxS8ddceCH8a7Zb/3KRpMML7Ehf5F7dIytnhXI8CLKMspXzlJxb2lpZc/EPhzI8qQFzWInpN5hP6UjsKPXYw58GMije22tvH3ESl2ZCHE3RMfQf2R6Jy57Ej9ajZde90i6J37Rn67/YhrRY"
+        registryCredential = "${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}:${AWS_SESSION_TOKEN}"
+
     }
    
     stages {
@@ -61,15 +65,4 @@ pipeline {
       }
       
     }
-}
-
-def awsCredentials() {
-    def accessKeyId = "ASIAUSPCER3QCJGCB654"
-    def secretAccessKey = "H+i8mMa4Aqrx1lXcwr3WGuEYvGjbuHkRd7aGO4Ma"
-    def sessionToken = "FwoGZXIvYXdzEPH//////////wEaDJ0ZzKH9j3xFiP1iwiKGAeOMs+cdw3kBtdp3ix2RApUm5CQQu4q0QPdMS8gUEWxzBHKbsJ745h/IiZkxQJdwaIFqRecOW0fYduPdfVSFT0yn014ObNmdychp7kxS8ddceCH8a7Zb/3KRpMML7Ehf5F7dIytnhXI8CLKMspXzlJxb2lpZc/EPhzI8qQFzWInpN5hP6UjsKPXYw58GMije22tvH3ESl2ZCHE3RMfQf2R6Jy57Ej9ajZde90i6J37Rn67/YhrRY"
-
-    def basicAWSCredentials = new BasicAWSCredentials(accessKeyId, secretAccessKey)
-    def staticCredentialsProvider = new AWSStaticCredentialsProvider(basicAWSCredentials.withSessionToken(sessionToken))
-
-    return staticCredentialsProvider
 }
