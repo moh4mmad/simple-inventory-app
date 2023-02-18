@@ -15,38 +15,53 @@ pipeline {
    
     stages {
 
-    // Tests
-    // stage('Unit Tests') {
-    //   steps{
-    //     script {
-    //       sh 'npm install'
-    //       sh 'npm test -- --watchAll=false'
-    //     }
-    //   }
-    // }
+      
         
-    // Building Docker images
-      stage('Building image') {
-        steps{
-          dir('backend') {
+      // Building Docker images
+      // stage('Building image') {
+      //   steps{
+      //     dir('backend') {
+      //       script {
+      //         dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+      //       }
+      //     }
+      //   }
+      // }
+
+      // login to AWS ECR, build the image and push it to ECR
+      stage('Get temporary session token') {
+        steps {
             script {
-              dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}") {
+                    def sts = aws.STS()
+                    def mfaSerial = 'arn:aws:iam::314543738592:mfa/newInventoryDevice'
+                    def mfaToken = input(message: 'Enter MFA token:', parameters: [string(defaultValue: '', description: 'Enter MFA token', name: 'MFA_TOKEN')])
+                    def tokenResponse = sts.getSessionToken(Duration.seconds(129600), [SerialNumber: mfaSerial, TokenCode: mfaToken])
+                    def accessKeyId = tokenResponse.credentials.accessKeyId
+                    def secretAccessKey = tokenResponse.credentials.secretAccessKey
+                    def sessionToken = tokenResponse.credentials.sessionToken
+
+                    sh "export AWS_ACCESS_KEY_ID=${accessKeyId}"
+                    sh "export AWS_SECRET_ACCESS_KEY=${secretAccessKey}"
+                    sh "export AWS_SESSION_TOKEN=${sessionToken}"
+
+                    docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}".push()
+                }
             }
-          }
         }
       }
    
     // Uploading Docker images into AWS ECR
-      stage('Pushing to ECR') {
-        steps{  
-            script {
-              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
-              {
-                dockerImage.push()
-              }
-            }
-          }
-      }
+      // stage('Pushing to ECR') {
+      //   steps{  
+      //       script {
+      //         docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+      //         {
+      //           dockerImage.push()
+      //         }
+      //       }
+      //     }
+      // }
       
       stage('Deploy') {
         steps{
