@@ -36,10 +36,10 @@ pipeline {
       stage('Building image & push to ECR') {
         steps{
           //dir('backend') {
-            //script {
-              sh './build.sh'
+            script {
+              sh 'chmod +x ./build.sh && ./build.sh'
               //dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-            //}
+            }
           //}
         }
       }
