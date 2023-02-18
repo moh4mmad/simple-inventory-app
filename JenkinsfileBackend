@@ -10,7 +10,7 @@ pipeline {
         IMAGE_REPO_NAME="inventory-app"
         IMAGE_TAG="backend${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        registryCredential = "aws-credential"
+        registryCredential = awsCredentials()
     }
    
     stages {
@@ -41,27 +41,6 @@ pipeline {
         steps{  
             script {
 
-              def ecrCredentials = withAWS(region: AWS_DEFAULT_REGION, credentials: registryCredential) {
-                    def sts = aws.STS()
-                    def mfa = "arn:aws:iam::${AWS_ACCOUNT_ID}:mfa/newInventoryDevice"
-                    def tokenCode = input(
-                        message: 'Enter your MFA token code:',
-                        parameters: [
-                            string(defaultValue: '', description: 'Enter your MFA token code', name: 'tokenCode')
-                        ]
-                    )
-                    def session = sts.getSessionToken(
-                        new com.amazonaws.services.securitytoken.model.GetSessionTokenRequest()
-                            .withSerialNumber(mfa)
-                            .withTokenCode(tokenCode)
-                    )
-                    return [
-                        accessKey: session.credentials.accessKeyId,
-                        secretKey: session.credentials.secretAccessKey,
-                        sessionToken: session.credentials.sessionToken
-                    ]
-              }
-
               docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
               {
                 dockerImage.push()
@@ -82,4 +61,15 @@ pipeline {
       }
       
     }
+}
+
+def awsCredentials() {
+    def accessKeyId = "ASIAUSPCER3QCJGCB654"
+    def secretAccessKey = "H+i8mMa4Aqrx1lXcwr3WGuEYvGjbuHkRd7aGO4Ma"
+    def sessionToken = "FwoGZXIvYXdzEPH//////////wEaDJ0ZzKH9j3xFiP1iwiKGAeOMs+cdw3kBtdp3ix2RApUm5CQQu4q0QPdMS8gUEWxzBHKbsJ745h/IiZkxQJdwaIFqRecOW0fYduPdfVSFT0yn014ObNmdychp7kxS8ddceCH8a7Zb/3KRpMML7Ehf5F7dIytnhXI8CLKMspXzlJxb2lpZc/EPhzI8qQFzWInpN5hP6UjsKPXYw58GMije22tvH3ESl2ZCHE3RMfQf2R6Jy57Ej9ajZde90i6J37Rn67/YhrRY"
+
+    def basicAWSCredentials = new BasicAWSCredentials(accessKeyId, secretAccessKey)
+    def staticCredentialsProvider = new AWSStaticCredentialsProvider(basicAWSCredentials.withSessionToken(sessionToken))
+
+    return staticCredentialsProvider
 }
