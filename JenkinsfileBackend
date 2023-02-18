@@ -10,7 +10,7 @@ pipeline {
         IMAGE_REPO_NAME="inventory-app"
         IMAGE_TAG="${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        registryCredential = "aws credential"
+        registryCredential = "aws-credential"
     }
    
     stages {
@@ -40,18 +40,19 @@ pipeline {
     stage('Pushing to ECR') {
      steps{  
          script {
-			docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential) {
-                    	dockerImage.push()
-                	}
-         }
+          docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+          {
+            dockerImage.push()
+          }
         }
       }
+    }
       
     stage('Deploy') {
      steps{
             withAWS(credentials: registryCredential, region: "${AWS_DEFAULT_REGION}") {
                 script {
-			sh './script.sh'
+                  sh './script.sh'
                 }
             } 
         }
