@@ -11,21 +11,27 @@ pipeline {
         IMAGE_TAG="${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
-        MFA_SERIAL = "arn:aws:iam::314543738592:mfa/newInventoryDevice"
+        AWS_MFA_SERIAL = "arn:aws:iam::314543738592:mfa/newInventoryDevice"
         MFA_TOKEN =  '312647'
     }
    
     stages {
 
-    // Tests
-    // stage('Unit Tests') {
-    //   steps{
-    //     script {
-    //       sh 'npm install'
-    //       sh 'npm test -- --watchAll=false'
-    //     }
-    //   }
-    // }
+        // Get temporary authentication token using AWS CLI
+        stage('Authenticate with AWS') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${registryCredential}"]]) {
+                    withEnv(['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_DEFAULT_REGION']) {
+                        script {
+                            sh "aws sts get-session-token --serial-number ${AWS_MFA_SERIAL} --token-code ${MFA_TOKEN} --duration-seconds 3600 > token.txt"
+                            sh "export AWS_ACCESS_KEY_ID=`cat token.txt | jq -r '.Credentials.AccessKeyId'`"
+                            sh "export AWS_SECRET_ACCESS_KEY=`cat token.txt | jq -r '.Credentials.SecretAccessKey'`"
+                            sh "export AWS_SESSION_TOKEN=`cat token.txt | jq -r '.Credentials.SessionToken'`"
+                        }
+                    }
+                }
+            }
+        }
         
     // Building Docker images
       stage('Building image') {
@@ -42,17 +48,7 @@ pipeline {
       stage('Pushing to ECR') {
         steps{  
             script {
-
-              // Get temporary authentication token using AWS CLI
-              withCredentials([string(credentialsId: 'aws-credential', variable: 'aws_creds')]) {
-                def cmd = "aws sts get-session-token --serial-number ${MFA_SERIAL} --token-code ${MFA_TOKEN} --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]' --output text"
-                def creds = sh(script: cmd, returnStdout: true).trim().split()
-                env.AWS_ACCESS_KEY_ID = creds[0]
-                env.AWS_SECRET_ACCESS_KEY = creds[1]
-                env.AWS_SESSION_TOKEN = creds[2]
-              }
-
-              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}")
               {
                 dockerImage.push()
               }
