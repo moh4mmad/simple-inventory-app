@@ -38,23 +38,25 @@ pipeline {
     }
         
     // Building Docker images
-      stage('Building image') {
-        steps{
-          dir('backend') {
-            script {
-              dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-            }
-          }
-        }
-      }
+      // stage('Building image') {
+      //   steps{
+      //     dir('backend') {
+      //       script {
+      //         dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+      //       }
+      //     }
+      //   }
+      // }
    
     // Uploading Docker images into AWS ECR
       stage('Pushing to ECR') {
         steps{  
             script {
-              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}")
               {
-                dockerImage.push()
+                sh "docker build -t ${IMAGE_REPO_NAME}:${IMAGE_TAG} ."
+                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:backend"
+                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}"
               }
             }
           }
