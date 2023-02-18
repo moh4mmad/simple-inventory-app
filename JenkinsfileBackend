@@ -34,9 +34,8 @@ pipeline {
       // Building Docker images & push to ECR
       stage('Building image & push to ECR') {
         when {
-          anyOf {
-            branch 'backend'
-            branch 'frontend'
+          expression {
+            env.BRANCH_NAME == 'backend' || env.BRANCH_NAME == 'frontend'
           }
         }
         steps{
