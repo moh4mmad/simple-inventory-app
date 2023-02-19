@@ -19,9 +19,8 @@ pipeline {
     // Building Docker images
       stage('Building image') {
         when {
-          anyOf {
-            branch '*/backend'
-            branch '*/frontend'
+          expression {
+            branch == 'backend' || branch == 'frontend'
           }
         }
         steps{
@@ -44,9 +43,8 @@ pipeline {
     // Uploading Docker images into AWS ECR
       stage('Pushing to ECR') {
         when {
-          anyOf {
-            branch '*/backend'
-            branch '*/frontend'
+          expression {
+            branch == 'backend' || branch == 'frontend'
           }
         }
         steps{
@@ -61,9 +59,8 @@ pipeline {
       
       stage('Deploy') {
         when {
-          anyOf {
-            branch '*/backend'
-            branch '*/frontend'
+          expression {
+            branch == 'backend' || branch == 'frontend'
           }
         }
         steps{
