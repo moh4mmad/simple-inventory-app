@@ -12,6 +12,7 @@ pipeline {
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
         workdir = "./backend"
+        BRANCH_NAME = "${GIT_BRANCH.split("/")[1]}"
     }
    
     stages {
@@ -25,8 +26,8 @@ pipeline {
         // }
         steps{
           script {
-            echo "${env.BRANCH_NAME}"
-            if(env.BRANCH_NAME == 'frontend') {
+            echo BRANCH_NAME
+            if(BRANCH_NAME == 'frontend') {
               env.IMAGE_TAG = "frontend${env.BUILD_ID}"
               env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
               env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
