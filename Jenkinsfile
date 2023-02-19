@@ -19,10 +19,10 @@ pipeline {
     // Building Docker images
       stage('Building image') {
         when {
-          anyOf {
+          //anyOf {
             branch "origin/backend"
-            branch "origin/frontend"
-          }
+            //branch "origin/frontend"
+         // }
         }
         steps{
           script {
