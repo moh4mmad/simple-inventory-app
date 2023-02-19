@@ -11,6 +11,7 @@ pipeline {
         IMAGE_TAG="backend${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
+        workdir = "./backend"
     }
    
     stages {
@@ -24,12 +25,13 @@ pipeline {
           }
         }
         steps{
-          def workdir = env.BRANCH_NAME == 'backend' ? './backend' : './frontend'
           if(env.BRANCH_NAME == 'frontend') {
             env.IMAGE_TAG = "frontend${env.BUILD_ID}"
             env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
             env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
+            env.workdir = "./frontend"
           }
+          
           dir(workdir) {
             script {
               dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
