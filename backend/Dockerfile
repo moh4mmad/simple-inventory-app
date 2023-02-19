@@ -10,5 +10,4 @@ RUN npm install --force
 COPY . .
 EXPOSE 8080
 RUN mkdir -p /app/uploads
-#RUN npm run db:migration
 CMD ["npm", "run", "start:production"]
