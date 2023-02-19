@@ -18,13 +18,11 @@ pipeline {
 
       // Building Docker images
       stage('Building image') {
-        
-        when {
-          echo branch
-          // anyOf {
-          //   branch 'backend'
-          // }
-        }
+        // when {
+        //   anyOf {
+        //     branch 'backend'
+        //   }
+        // }
         steps{
           script {
             echo "${env.BRANCH_NAME}"
