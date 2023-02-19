@@ -25,13 +25,14 @@ pipeline {
           }
         }
         steps{
-          if(env.BRANCH_NAME == 'frontend') {
-            env.IMAGE_TAG = "frontend${env.BUILD_ID}"
-            env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
-            env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
-            env.workdir = "./frontend"
+          script {
+            if(env.BRANCH_NAME == 'frontend') {
+              env.IMAGE_TAG = "frontend${env.BUILD_ID}"
+              env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
+              env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
+              env.workdir = "./frontend"
+            }
           }
-          
           dir(workdir) {
             script {
               dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
