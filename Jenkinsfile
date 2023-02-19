@@ -20,13 +20,13 @@ pipeline {
       stage('Building image') {
         when {
           anyOf {
-            branch 'backend'
-            branch 'frontend'
+            branch '*/backend'
+            branch '*/frontend'
           }
         }
         steps{
           script {
-            if(env.BRANCH_NAME == 'frontend') {
+            if(env.BRANCH_NAME == '*/frontend') {
               env.IMAGE_TAG = "frontend${env.BUILD_ID}"
               env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
               env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
@@ -45,8 +45,8 @@ pipeline {
       stage('Pushing to ECR') {
         when {
           anyOf {
-            branch 'backend'
-            branch 'frontend'
+            branch '*/backend'
+            branch '*/frontend'
           }
         }
         steps{
@@ -62,8 +62,8 @@ pipeline {
       stage('Deploy') {
         when {
           anyOf {
-            branch 'backend'
-            branch 'frontend'
+            branch '*/backend'
+            branch '*/frontend'
           }
         }
         steps{
