@@ -16,17 +16,17 @@ pipeline {
    
     stages {
 
-    // Building Docker images
+      // Building Docker images
       stage('Building image') {
+        sh "${env.BRANCH_NAME}"
         when {
-          //anyOf {
-            branch "origin/backend"
-            //branch "origin/frontend"
-         // }
+          anyOf {
+            branch 'backend'
+          }
         }
         steps{
           script {
-            if(env.BRANCH_NAME == 'origin/frontend') {
+            if(env.BRANCH_NAME == 'frontend') {
               env.IMAGE_TAG = "frontend${env.BUILD_ID}"
               env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
               env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
@@ -41,7 +41,7 @@ pipeline {
         }
       }
    
-    // Uploading Docker images into AWS ECR
+      // Uploading Docker images into AWS ECR
       stage('Pushing to ECR') {
         when {
           anyOf {
@@ -59,6 +59,7 @@ pipeline {
           }
       }
       
+      // deploying to AWS ECS
       stage('Deploy') {
         when {
           anyOf {
