@@ -24,7 +24,7 @@ pipeline {
           }
         }
         steps{
-          workdir = env.BRANCH_NAME == 'backend' ? './backend' : './frontend'
+          def workdir = env.BRANCH_NAME == 'backend' ? './backend' : './frontend'
           if(env.BRANCH_NAME == 'frontend') {
             env.IMAGE_TAG = "frontend${env.BUILD_ID}"
             env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
