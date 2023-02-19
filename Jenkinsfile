@@ -18,14 +18,16 @@ pipeline {
 
       // Building Docker images
       stage('Building image') {
-        sh "${env.BRANCH_NAME}"
+        
         when {
-          anyOf {
-            branch 'backend'
-          }
+          echo branch
+          // anyOf {
+          //   branch 'backend'
+          // }
         }
         steps{
           script {
+            echo "${env.BRANCH_NAME}"
             if(env.BRANCH_NAME == 'frontend') {
               env.IMAGE_TAG = "frontend${env.BUILD_ID}"
               env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
