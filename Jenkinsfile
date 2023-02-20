@@ -32,7 +32,7 @@ pipeline {
                 env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
                 env.workdir = "./frontend"
               }
-              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+              docker.withRegistry("https://314543738592.dkr.ecr.ap-southeast-2.amazonaws.com/inventory-app", "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
               {
                 dir(workdir) {
                   //build image
