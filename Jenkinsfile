@@ -8,7 +8,7 @@ pipeline {
         TASK_DEFINITION_NAME="INVENTORY-APP-BACKEND"
         DESIRED_COUNT="1"
         IMAGE_REPO_NAME="inventory-app"
-        IMAGE_TAG="backend${env.BUILD_ID}"
+        IMAGE_TAG="${env.BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
         registryCredential = "aws-credential"
         workdir = "./backend"
@@ -16,32 +16,8 @@ pipeline {
     }
    
     stages {
-
-      // Building Docker images
-      stage('') {
-        when {
-          expression {
-            BRANCH_NAME == 'backend' || BRANCH_NAME == 'frontend'
-          }
-        }
-        steps{
-          script {
-            if(BRANCH_NAME == 'frontend') {
-              env.IMAGE_TAG = "frontend${env.BUILD_ID}"
-              env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
-              env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
-              env.workdir = "./frontend"
-            }
-          }
-          dir(workdir) {
-            script {
-              dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-            }
-          }
-        }
-      }
    
-      // Uploading Docker images into AWS ECR
+      // Building image & Pushing to ECR
       stage('Building image & Pushing to ECR') {
         when {
           expression {
@@ -51,14 +27,11 @@ pipeline {
         steps {
             script {
               if(BRANCH_NAME == 'frontend') {
-                env.IMAGE_TAG = "frontend${env.BUILD_ID}"
+                env.IMAGE_TAG = "${env.BUILD_ID}"
                 env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
                 env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
                 env.workdir = "./frontend"
               }
-              //cleanup current user docker credentials
-              sh 'rm  ~/.dockercfg || true'
-              sh 'rm ~/.docker/config.json || true'
               docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
               {
                 dir(workdir) {
