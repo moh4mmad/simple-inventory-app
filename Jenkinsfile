@@ -50,7 +50,7 @@ pipeline {
         }
         steps {
             script {
-              docker.withRegistry("https://" + REPOSITORY_URI + ":" + ${IMAGE_TAG}, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+              docker.withRegistry("https://" + REPOSITORY_URI + ":" + IMAGE_TAG, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
               {
                 dockerImage.push()
               }
