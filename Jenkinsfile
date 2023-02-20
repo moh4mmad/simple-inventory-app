@@ -18,7 +18,7 @@ pipeline {
     stages {
 
       // Building Docker images
-      stage('Building image') {
+      stage('') {
         when {
           expression {
             BRANCH_NAME == 'backend' || BRANCH_NAME == 'frontend'
@@ -42,7 +42,7 @@ pipeline {
       }
    
       // Uploading Docker images into AWS ECR
-      stage('Pushing to ECR') {
+      stage('Building image & Pushing to ECR') {
         when {
           expression {
             BRANCH_NAME == 'backend' || BRANCH_NAME == 'frontend'
@@ -50,9 +50,23 @@ pipeline {
         }
         steps {
             script {
-              docker.withRegistry(REPOSITORY_URI + ":" + IMAGE_TAG, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
+              if(BRANCH_NAME == 'frontend') {
+                env.IMAGE_TAG = "frontend${env.BUILD_ID}"
+                env.SERVICE_NAME = "INVENTORY-APP-FRONTEND-TASK"
+                env.TASK_DEFINITION_NAME = "INVENTORY-APP-FRONTEND"
+                env.workdir = "./frontend"
+              }
+              //cleanup current user docker credentials
+              sh 'rm  ~/.dockercfg || true'
+              sh 'rm ~/.docker/config.json || true'
+              docker.withRegistry("https://" + REPOSITORY_URI, "ecr:${AWS_DEFAULT_REGION}:" + registryCredential)
               {
-                dockerImage.push()
+                dir(workdir) {
+                  //build image
+                  dockerImage = docker.build("${IMAGE_REPO_NAME}:${IMAGE_TAG}")
+                  //push image
+                  dockerImage.push()
+                }
               }
             }
           }
