@@ -1,5 +1,3 @@
-# Scopic Software - DevOps Skill Test
-
 ## Simple Inventory Application
 
 This is a very simple and basic product inventory application.
